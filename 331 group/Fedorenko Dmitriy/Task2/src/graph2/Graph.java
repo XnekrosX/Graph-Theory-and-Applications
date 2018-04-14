@@ -177,7 +177,7 @@ public class Graph {
         out.close();
 	}
 	
-	public void outputSVG(String fileName, List<Vertex> path, double x, double y, List<Vertex> points) throws IOException {
+	public void outputSVG(String fileName, List<Vertex> path, List<List<Vertex>> otherPaths, double x, double y, List<Vertex> points) throws IOException {
 		
         double maxX, minX, maxY, minY;
         final double size = 3000.0;
@@ -217,22 +217,26 @@ public class Graph {
         for (Edge edge : edges)
         	out.println("<line x1=\"" + (size - (maxX - edge.getVertex1().getX())/xCoef) + "\" y1=\"" + ((maxY - edge.getVertex1().getY())/yCoef) + "\" x2=\"" + 
         			(size - (maxX - edge.getVertex2().getX())/xCoef) +"\" y2=\"" + ((maxY - edge.getVertex2().getY())/yCoef) + "\" style=\"stroke:rgb(0,0,0);stroke-width:1\" />");
+         
+        out.println("<circle cx=\"" + (size - (maxX - x)/xCoef) + "\" cy=\""+ ((maxY - y)/yCoef) +"\" r=\"5px\" fill=\"red\"/>");
+         
+        for (List<Vertex> list : otherPaths)
+        	for (int i = 0; i < list.size() - 1; i++)
+            	out.println("<line x1=\"" + (size - (maxX - list.get(i).getX())/xCoef) + "\" y1=\"" + ((maxY - list.get(i).getY())/yCoef) + "\" x2=\"" + 
+            			(size - (maxX - list.get(i + 1).getX())/xCoef) +"\" y2=\"" + ((maxY - list.get(i + 1).getY())/yCoef) + "\" style=\"stroke: aqua; stroke-width:5\" />");
         
         for (int i = 0; i < path.size() - 1; i++)
         	out.println("<line x1=\"" + (size - (maxX - path.get(i).getX())/xCoef) + "\" y1=\"" + ((maxY - path.get(i).getY())/yCoef) + "\" x2=\"" + 
         			(size - (maxX - path.get(i + 1).getX())/xCoef) +"\" y2=\"" + ((maxY - path.get(i + 1).getY())/yCoef) + "\" style=\"stroke: blue; stroke-width:5\" />");
         
-        out.println("<circle cx=\"" + (size - (maxX - x)/xCoef) + "\" cy=\""+ ((maxY - y)/yCoef) +"\" r=\"5px\" fill=\"red\"/>");
-        
         for (Vertex vertex : points)
         	out.println("<circle cx=\"" + (size - (maxX - vertex.getX())/xCoef) + "\" cy=\""+ ((maxY - vertex.getY())/yCoef) +"\" r=\"10px\" fill=\"orange\"/>");
-
         
         out.print("</svg>");
         out.close();
 	}
 	
-	public DistancesAndPrev Astar(Vertex start, Vertex finish) {
+	public DistancesAndPrev Astar(Vertex start, Vertex finish, String heuristic) {
 		List<Vertex> listOfVertexes = new ArrayList<Vertex>(vertexes);
 		Set<Vertex> closed = new HashSet<Vertex>();
 		List<Vertex> open = new ArrayList<Vertex>();
@@ -249,7 +253,7 @@ public class Graph {
 				gScore.add(Double.POSITIVE_INFINITY);
 		}
 		List<Double> fScoreOpen = new ArrayList<Double>();
-		fScoreOpen.add(0.0);
+		fScoreOpen.add(start.distance(finish, heuristic));
 		while (!open.isEmpty()) {
 			Vertex currentVertex = open.get(0);
 			Double minfScore = fScoreOpen.get(0);
@@ -278,7 +282,7 @@ public class Graph {
 				if (altScore < gScore.get(succesorInd)) {
 					prev.set(succesorInd, currentInd);
 					gScore.set(succesorInd, altScore);
-					fScoreOpen.set(open.indexOf(succesor), gScore.get(succesorInd) + succesor.distance(finish));
+					fScoreOpen.set(open.indexOf(succesor), gScore.get(succesorInd) + succesor.distance(finish, heuristic));
 				}
 			}
 		}
@@ -386,11 +390,19 @@ public class Graph {
 	}
 	
 	public List<Vertex> shortestPath(Vertex firstVertex, Vertex finalVertex, List<Integer> prev){
+		if (prev.isEmpty())
+			return new ArrayList<Vertex>();
+		//if (finalVertex == null)
+		//	System.out.println("!!");
+		//if (firstVertex == null)
+		//	System.out.println("!!!");
 		List<Vertex> listOfVertexes = new ArrayList<Vertex>(vertexes);
 		List<Vertex> path = new ArrayList<Vertex>();
 		Vertex currentVertex = finalVertex;
 		path.add(finalVertex);
 		while (!currentVertex.equals(firstVertex)) {
+			if (prev.get(listOfVertexes.indexOf(currentVertex)) == null)
+				return new ArrayList<Vertex>();
 			currentVertex = listOfVertexes.get(prev.get(listOfVertexes.indexOf(currentVertex)));
 			path.add(currentVertex);
 		}

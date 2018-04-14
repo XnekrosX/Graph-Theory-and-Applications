@@ -6,8 +6,6 @@ import javafx.stage.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.event.*;
-//import javafx.geometry.*;
-//import javafx.geometry.Pos;
 import javafx.geometry.Insets;
 
 import java.util.ArrayList;
@@ -142,6 +140,19 @@ public class graphProj2 extends Application {
 	Coordinates startCoord = null;
 	List<Vertex> hospitals = new ArrayList<Vertex>();
 	
+	public Graph pathsToGraph(List<List<Vertex>> paths){
+		Set<Edge> edges = new HashSet<Edge>();
+		Set<Vertex> vertexes = new HashSet<Vertex>(); 
+		for (List<Vertex> path : paths) {
+			for (int i = 0; i < path.size() - 1; i++) {
+				vertexes.add(path.get(i));
+				edges.add(new Edge(path.get(i), path.get(i + 1)));
+			}
+			vertexes.add(path.get(path.size() -1));
+		}
+		return new Graph(vertexes, edges);
+	}
+	
 	public void start(Stage myStage) {
 		myStage.setTitle("Title");
 		
@@ -175,8 +186,24 @@ public class graphProj2 extends Application {
 		levitBtn.setDisable(true);
 		astarBtn.setDisable(true);
 		
+		final ToggleGroup group = new ToggleGroup();
+
+		RadioButton rb1 = new RadioButton("Euclid");
+		rb1.setToggleGroup(group);
+		rb1.setSelected(true);
+
+		RadioButton rb2 = new RadioButton("Manhattan");
+		rb2.setToggleGroup(group);
+		 
+		RadioButton rb3 = new RadioButton("Chebishev");
+		rb3.setToggleGroup(group);
+		
 		latField.setDisable(true);
 		lonField.setDisable(true);
+		
+		rb1.setDisable(true);
+		rb2.setDisable(true);
+		rb3.setDisable(true);
 		
 		final FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Open map");
@@ -193,8 +220,7 @@ public class graphProj2 extends Application {
 		hospitals.add(new Vertex(6, 43.040180, 44.632376));
 		hospitals.add(new Vertex(7, 43.020088, 44.640005));
 		hospitals.add(new Vertex(8, 43.053748, 44.667499));
-		hospitals.add(new Vertex(9, 43.038693, 44.672031));
-		hospitals.add(new Vertex(10, 43.017310, 44.676089));
+		hospitals.add(new Vertex(9, 43.017310, 44.676089));
 		
 		//event handler for dijkstraBtn
 		dijkstraBtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -216,9 +242,15 @@ public class graphProj2 extends Application {
 		       		}
 		       	}
 		       	List<Vertex> path = graph.shortestPath(startVertex, finishVertex, dp.prev);
-		        System.out.println(path.size() + " : size of the path");
+		       	List<List<Vertex>> paths = new ArrayList<List<Vertex>>();
+		        for (Vertex hospital : hospitals) {
+		        	Vertex nearestVertex = graph.nearestVertex(hospital.getX(), hospital.getY());
+		        	paths.add(graph.shortestPath(startVertex, nearestVertex, dp.prev));
+		        }
+		       	System.out.println(path.size() + " : size of the path");
 		       	try {
-					graph.outputSVG("result/dijkstraPath.svg", path, startCoord.x, startCoord.y, hospitals);
+		       		pathsToGraph(paths).outputAdjacencyList("result/path.csv");
+					graph.outputSVG("result/dijkstraPath.svg", path, paths, startCoord.x, startCoord.y, hospitals);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -245,9 +277,15 @@ public class graphProj2 extends Application {
 		       		}
 		       	}
 		       	List<Vertex> path = graph.shortestPath(startVertex, finishVertex, dp.prev);
+		       	List<List<Vertex>> paths = new ArrayList<List<Vertex>>();
+		        for (Vertex hospital : hospitals) {
+		        	Vertex nearestVertex = graph.nearestVertex(hospital.getX(), hospital.getY());
+		        	paths.add(graph.shortestPath(startVertex, nearestVertex, dp.prev));
+		        }
 		        System.out.println(path.size() + " : size of the path");
 		       	try {
-					graph.outputSVG("result/levitPath.svg", path, startCoord.x, startCoord.y, hospitals);
+		       		pathsToGraph(paths).outputAdjacencyList("result/path.csv");
+					graph.outputSVG("result/levitPath.svg", path, paths, startCoord.x, startCoord.y, hospitals);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -262,7 +300,12 @@ public class graphProj2 extends Application {
 				Long time1 = System.nanoTime();
 				for (Vertex hospital : hospitals) {
 					Vertex nearestVertex = graph.nearestVertex(hospital.getX(), hospital.getY());
-					dp.add(graph.Astar(startVertex, nearestVertex));
+					if (rb1.isSelected())
+						dp.add(graph.Astar(startVertex, nearestVertex, "e"));
+					else if (rb2.isSelected())
+						dp.add(graph.Astar(startVertex, nearestVertex, "m"));
+					else if (rb3.isSelected())
+						dp.add(graph.Astar(startVertex, nearestVertex, "c"));
 				}
 		       	Long time2 = System.nanoTime();
 		       	Vertex finishVertex = hospitals.get(0);
@@ -281,9 +324,15 @@ public class graphProj2 extends Application {
 		       		}
 		       	}
 				List<Vertex> path = graph.shortestPath(startVertex, finishVertex, dp.get(hospitalInd).prev);
+				List<List<Vertex>> paths = new ArrayList<List<Vertex>>();
+				for (int i = 0; i < dp.size(); i++) {
+		        	Vertex nearestVertex = graph.nearestVertex(hospitals.get(i).getX(), hospitals.get(i).getY());
+		        	paths.add(graph.shortestPath(startVertex, nearestVertex, dp.get(i).prev));
+		        }
 		        System.out.println(path.size() + " : size of the path");
 		       	try {
-					graph.outputSVG("result/astarPath.svg", path, startCoord.x, startCoord.y, hospitals);
+		       		pathsToGraph(paths).outputAdjacencyList("result/path.csv");
+					graph.outputSVG("result/astarPath.svg", path, paths, startCoord.x, startCoord.y, hospitals);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -337,6 +386,9 @@ public class graphProj2 extends Application {
 						dijkstraBtn.setDisable(false);
 						levitBtn.setDisable(false);
 						astarBtn.setDisable(false);
+						rb1.setDisable(false);
+						rb2.setDisable(false);
+						rb3.setDisable(false);
 						return;
 					}
 				}
@@ -344,6 +396,9 @@ public class graphProj2 extends Application {
 					dijkstraBtn.setDisable(true);
 					levitBtn.setDisable(true);
 					astarBtn.setDisable(true);
+					rb1.setDisable(true);
+					rb2.setDisable(true);
+					rb3.setDisable(true);
 			}
 		});
 		//event handler for exportListBtn
@@ -391,7 +446,7 @@ public class graphProj2 extends Application {
 		dijkstraBtn.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		levitBtn.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		astarBtn.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-		
+		setStartBtn.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		//specify column constraints
 		for (int colIndex = 0; colIndex < 4; colIndex++) {
 		    ColumnConstraints cc = new ColumnConstraints();
@@ -413,12 +468,15 @@ public class graphProj2 extends Application {
         GridPane.setConstraints(lonLabel, 0, 4);
         GridPane.setConstraints(lonField, 1, 4, 2, 1);
         GridPane.setConstraints(setStartBtn, 3, 3, 2, 2);
-        GridPane.setConstraints(dijkstraBtn, 1, 5);
-        GridPane.setConstraints(levitBtn, 2, 5);
-        GridPane.setConstraints(astarBtn, 3, 5);
-        GridPane.setConstraints(latMinMaxLabel, 0, 6, 4, 1);
-        GridPane.setConstraints(lonMinMaxLabel, 0, 7, 4, 1);
-        GridPane.setConstraints(statusLabel, 0, 8, 4, 1);
+        GridPane.setConstraints(rb1, 0, 5);
+        GridPane.setConstraints(rb2, 0, 6);
+        GridPane.setConstraints(rb3, 0, 7);
+        GridPane.setConstraints(astarBtn, 1, 5);
+        GridPane.setConstraints(dijkstraBtn, 2, 5);
+        GridPane.setConstraints(levitBtn, 3, 5);
+        GridPane.setConstraints(latMinMaxLabel, 0, 8, 4, 1);
+        GridPane.setConstraints(lonMinMaxLabel, 0, 9, 4, 1);
+        GridPane.setConstraints(statusLabel, 0, 10, 4, 1);
         
         //setting gaps
         inputGridPane.setHgap(6);
@@ -427,14 +485,14 @@ public class graphProj2 extends Application {
         //adding nodes into the grid
         inputGridPane.getChildren().addAll(openMapLabel, openMapBtn, parseMapBtn, exportLabel, 
         		exportListBtn, exportMatrixBtn, exportImageBtn, latLabel, lonLabel, latField,
-        		lonField, setStartBtn, dijkstraBtn, levitBtn, astarBtn, latMinMaxLabel, 
+        		lonField, setStartBtn, dijkstraBtn, levitBtn, astarBtn, rb1, rb2, rb3, latMinMaxLabel, 
         		lonMinMaxLabel, statusLabel);
 
         final Pane rootGroup = new VBox(12);
         rootGroup.getChildren().addAll(inputGridPane);
         rootGroup.setPadding(new Insets(12, 12, 12, 12));
 		
-		Scene myScene = new Scene(rootGroup, 300, 250);
+		Scene myScene = new Scene(rootGroup, 350, 300);
 		
 		myStage.setScene(myScene);
 		

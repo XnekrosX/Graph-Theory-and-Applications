@@ -64,6 +64,15 @@ public class Vertex implements Comparable<Vertex> {
 		return Math.sqrt(Math.pow(this.x - secondVertex.getX(), 2) + Math.pow(this.y - secondVertex.getY(), 2));
 	}
 	
+	public double distance(Vertex secondVertex, String heuristic) {
+		if (heuristic.equals("manhattan") || (heuristic.equals("m")))
+			return Math.abs(this.x - secondVertex.getX()) + Math.abs(this.y - secondVertex.getY());
+		else if ((heuristic.equals("chebishev")) || (heuristic.equals("c")))
+			return Math.max(Math.abs(this.x - secondVertex.getX()), Math.abs(this.y - secondVertex.getY()));
+		else
+			return Math.sqrt(Math.pow(this.x - secondVertex.getX(), 2) + Math.pow(this.y - secondVertex.getY(), 2));
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
