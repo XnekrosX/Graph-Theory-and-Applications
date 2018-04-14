@@ -1,9 +1,10 @@
-package graphProj;
+package graph2;
 
 public class Vertex implements Comparable<Vertex> {
 	
 	private long id;
 	private double lat, lon;
+	private double x, y;
 	
 	public Vertex (long id) {
 		this.id = id;
@@ -13,6 +14,14 @@ public class Vertex implements Comparable<Vertex> {
 		this.id = id;
 		this.lat = lat;
 		this.lon = lon;
+		double rLat = Math.toRadians(lat);
+		double rLon = Math.toRadians(lon);
+		double a = 6378137.0;
+		double b = 6356752.3142;
+		double f = (a - b) / a;
+		double e = Math.sqrt(2 * f - Math.pow(f, 2));
+		x = a * rLon;
+		y = a * Math.log(Math.PI / 4 + rLat / 2) * ((1 - e * Math.sin(rLat)) / Math.pow((1 + e * Math.sin(rLat)), (e / 2)));
 	}
 	
 	public long getId() {
@@ -27,14 +36,33 @@ public class Vertex implements Comparable<Vertex> {
 		this.lon = lon;
 	}
 	
-	public double getLatitude() {
+	public double getLat() {
 		return lat;
 	}
 	
-	public double getLongitude() {
+	public double getLon() {
 		return lon;
 	}
 	
+	public double getX() {
+		return x;
+	}
+	
+	public double getY() {
+		return y;
+	}
+	
+	public void setX(double x) {
+		this.x = x;
+	}
+	
+	public void setY(double y) {
+		this.y = y;
+	}
+	
+	public double distance(Vertex secondVertex) {
+		return Math.sqrt(Math.pow(this.x - secondVertex.getX(), 2) + Math.pow(this.y - secondVertex.getY(), 2));
+	}
 	
 	@Override
 	public int hashCode() {

@@ -101,7 +101,7 @@ public class graphProj {
         Graph g = parseXML(inFileName);
         pw.println("parsing done!");
         if (mode == null)
-        	mode = "list";
+        	mode = "image";
         switch (mode) {
         	case "list": {
         		try {

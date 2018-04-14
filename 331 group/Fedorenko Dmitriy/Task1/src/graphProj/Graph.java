@@ -59,22 +59,25 @@ public class Graph {
 	
 	public void outputSVG() throws IOException {
 		
-        double maxLat = -90, minLat = 90, maxLon = -180, minLon = 180;
+        double maxX = -100000000, minX = 100000000, maxY = -100000000, minY=100000000;
         final double size = 3000.0;
         
         for (Vertex vertex : vertexes) {
-        	if (vertex.getLatitude() > maxLat)
-        		maxLat = vertex.getLatitude();
-        	else if (vertex.getLatitude() < minLat)
-        		minLat = vertex.getLatitude();
-        	if (vertex.getLongitude() > maxLon)
-        		maxLon = vertex.getLongitude();
-        	else if (vertex.getLongitude() < minLon)
-        		minLon = vertex.getLongitude();
+        	if (vertex.getX() > maxX)
+        		maxX = vertex.getX();
+        	else if (vertex.getX() < minX)
+        		minX = vertex.getX();
+        	if (vertex.getY() > maxY)
+        		maxY = vertex.getY();
+        	else if (vertex.getY() < minY)
+        		minY = vertex.getY();
         }
-
-        final double latCoef = (maxLat - minLat) / size;
-        final double lonCoef = (maxLon - minLon) / size;
+        
+        final double xCoef = (maxX - minX) / size;
+        final double yCoef = (maxY - minY) / size;
+        
+        System.out.println(minX + " " + maxX);
+        System.out.println(minY + " " + maxY);
         
         String SVG_File = "result/image.svg";
         PrintWriter out = new PrintWriter(new FileWriter(SVG_File));
@@ -87,11 +90,11 @@ public class Graph {
                 "     height = \"" + size + "px\"  width = \"" + size + "px\">\n");
         
         for (Vertex vertex : vertexes)
-        	out.println("<circle cx=\"" + (size-(maxLon - vertex.getLongitude())/lonCoef) + "\" cy=\""+ (maxLat - vertex.getLatitude())/latCoef +"\" r=\"2px\" fill=\"black\"/>");
+        	out.println("<circle cx=\"" + (size - (maxX - vertex.getX())/xCoef) + "\" cy=\""+ ((maxY - vertex.getY())/yCoef) +"\" r=\"2px\" fill=\"black\"/>");
 
         for (Edge edge : edges)
-        	out.println("<line x1=\"" + (size-(maxLon - edge.getVertex1().getLongitude())/lonCoef) + "\" y1=\"" + (maxLat - edge.getVertex1().getLatitude())/latCoef + "\" x2=\"" + 
-        			(size-(maxLon - edge.getVertex2().getLongitude())/lonCoef) +"\" y2=\"" + (maxLat - edge.getVertex2().getLatitude())/latCoef + "\" style=\"stroke:rgb(0,0,0);stroke-width:1\" />");
+        	out.println("<line x1=\"" + (size - (maxX - edge.getVertex1().getX())/xCoef) + "\" y1=\"" + ((maxY - edge.getVertex1().getY())/yCoef) + "\" x2=\"" + 
+        			(size - (maxX - edge.getVertex2().getX())/xCoef) +"\" y2=\"" + ((maxY - edge.getVertex2().getY())/yCoef) + "\" style=\"stroke:rgb(0,0,0);stroke-width:1\" />");
         out.print("</svg>");
         out.close();
 	}
